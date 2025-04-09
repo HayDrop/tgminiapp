@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космический кликер</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        :root {
+            --space-dark: #0a0e23;
+            --space-blue: #1a237e;
+            --space-light: #4fc3f7;
+            --space-purple: #7b1fa2;
+            --space-pink: #e91e63;
+            --space-orange: #ff5722;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            background-color: var(--space-dark);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(25, 118, 210, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(233, 30, 99, 0.2) 0%, transparent 20%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="white" opacity="0.8"/><circle cx="50" cy="50" r="1" fill="white" opacity="0.6"/><circle cx="80" cy="30" r="1" fill="white" opacity="0.7"/><circle cx="30" cy="70" r="1" fill="white" opacity="0.5"/><circle cx="70" cy="80" r="1" fill="white" opacity="0.9"/></svg>');
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(10, 14, 35, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(79, 195, 247, 0.3);
+            border: 1px solid var(--space-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(79, 195, 247, 0.1) 0%, transparent 70%);
+            animation: pulse 15s infinite alternate;
+            z-index: -1;
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            color: var(--space-light);
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.7);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        
+        .score-container {
+            background-color: rgba(26, 35, 126, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid var(--space-blue);
+            box-shadow: 0 0 15px rgba(26, 35, 126, 0.5);
+        }
+        
+        .score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px white;
+            letter-spacing: 1px;
+        }
+        
+        .clicker {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, var(--space-pink), var(--space-purple));
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.5);
+            border: none;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .clicker::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            
+            height: 200%;
+            background: linear-gradient(
+                to bottom right, 
+                transparent, 
+                transparent, 
+                transparent, 
+                rgba(255, 255, 255, 0.3)
+            );
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -50%; top: -50%; }
+            100% { left: 150%; top: 150%; }
+        }
+        
+        .clicker:hover {
+            box-shadow: 0 0 40px rgba(233, 30, 99, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .clicker:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(233, 30, 99, 0.5);
+        }
+        
+        .stats {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(33, 33, 33, 0.5);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            border: 1px solid var(--space-orange);
+            box-shadow: 0 0 15px rgba(255, 87, 34, 0.3);
+        }
+        
+        .stat {
+            margin: 10px;
+            font-size: 16px;
+            min-width: 120px;
+            color: var(--space-light);
+        }
+        
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .upgrade {
+            background: linear-gradient(135deg, var(--space-blue), var(--space-purple));
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            border: 1px solid var(--space-light);
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upgrade::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transform: translateX(-100%);
+        }
+        
+        .upgrade:hover:not(:disabled)::before {
+            animation: upgradeShine 1.5s infinite;
+        }
+        
+        @keyframes upgradeShine {
+            100% { transform: translateX(100%); }
+        }
+        
+        .upgrade:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+        }
+        
+        .upgrade:disabled {
+            background: linear-gradient(135deg, #333, #555);
+            cursor: not-allowed;
+            opacity: 0.6;
+            border-color: #666;
+        }
+        
+        .achievements {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(33, 33, 33, 0.5);
+            border-radius: 10px;
+            border: 1px solid var(--space-pink);
+            box-shadow: 0 0 15px rgba(233, 30, 99, 0.3);
+        }
+        
+        .achievements h2 {
+            color: var(--space-light);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px var(--space-light);
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .achievement {
+            background: linear-gradient(135deg, #333, #555);
+            padding: 15px;
+            border-radius: 8px;
+            color: #aaa;
+            font-weight: bold;
+            opacity: 0.7;
+            transition: all 0.3s;
+            border: 1px solid #555;
+            position: relative;
+            
+            overflow: hidden;
+        }
+        
+        .achievement::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+        }
+        
+        .achievement.unlocked {
+            background: linear-gradient(135deg, var(--space-purple), var(--space-pink));
+            color: white;
+            opacity: 1;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.5);
+            border: 1px solid var(--space-light);
+        }
+        
+        .achievement.unlocked::after {
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+        }
+        
+        .achievement-title {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: inherit;
+        }
+        
+        .achievement-description {
+            font-size: 12px;
+            font-weight: normal;
+            color: inherit;
+            opacity: 0.8;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--space-purple), var(--space-blue));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+            border: 1px solid var(--space-light);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .particle {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>КОСМИЧЕСКИЙ КЛИКЕР</h1>
+        
+        <div class="score-container">
+            <div class="score">ЭНЕРГИЯ: <span id="score">0</span></div>
+        </div>
+        
+        <button class="clicker" id="clicker">СОБИРАТЬ ЭНЕРГИЮ</button>
+        
+        <div class="stats">
+            <div class="stat">Всего сборов: <span id="total-clicks">0</span></div>
+            <div class="stat">Мощность сбора: <span id="click-power">1</span></div>
+            <div class="stat">Автосбор/сек: <span id="auto-increment">0</span></div>
+        </div>
+        
+        <div class="upgrades">
+            <button class="upgrade" id="upgrade1" data-cost="10" data-increment="1">
+                Усилитель энергии (+1) - 10 ед.
+            </button>
+            <button class="upgrade" id="upgrade2" data-cost="50" data-increment="1">
+                Автоматический сбор (+1/сек) - 50 ед.
+            </button>
+            <button class="upgrade" id="upgrade3" data-cost="100" data-increment="5">
+                Квантовый сборщик (+5/сек) - 100 ед.
+            </button>
+            <button class="upgrade" id="upgrade4" data-cost="200" data-increment="2">
+                Усиление x2 - 200 ед.
+            </button>
+        </div>
+        
+        <div class="achievements">
+            <h2>ДОСТИЖЕНИЯ</h2>
+            <div class="achievements-grid" id="achievements-container">
+                <!-- Достижения будут добавляться через JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Новое достижение разблокировано!
+    </div>
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Игровые переменные
+            let score = 0;
+            let totalClicks = 0;
+            let clickPower = 1;
+            let autoIncrement = 0;
+            let achievements = [];
+            
+            // Элементы DOM
+            const scoreElement = document.getElementById('score');
+            const totalClicksElement = document.getElementById('total-clicks');
+            const clickPowerElement = document.getElementById('click-power');
+            const autoIncrementElement = document.getElementById('auto-increment');
+            const clicker = document.getElementById('clicker');
+            const upgrades = document.querySelectorAll('.upgrade');
+            const achievementsContainer = document.getElementById('achievements-container');
+            const notification = document.getElementById('notification');
+            
+            // Достижения
+            const achievementTemplates = [
+                {
+                    id: 'click-10',
+                    title: 'Новичок космоса',
+                    description: 'Собрать энергию 10 раз',
+                    condition: () => totalClicks >= 10,
+                    unlocked: false
+                },
+                {
+                    id: 'click-50',
+                    title: 'Исследователь',
+                    description: 'Собрать энергию 50 раз',
+                    condition: () => totalClicks >= 50,
+                    unlocked: false
+                },
+                {
+                    id: 'click-100',
+                    title: 'Мастер сбора',
+                    description: 'Собрать энергию 100 раз',
+                    condition: () => totalClicks >= 100,
+                    unlocked: false
+                },
+                {
+                    id: 'score-500',
+                    title: 'Энергетический магнат',
+                    description: 'Накопить 500 единиц энергии',
+                    condition: () => score >= 500,
+                    unlocked: false
+                },
+                {
+                    id: 'auto-10',
+                    title: 'Автоматизированная станция',
+                    description: 'Достичь 7 ед./сек автосбора',
+                    condition: () => autoIncrement >= 7,
+                    unlocked: false
+                },
+                {
+                    id: 'power-5',
+                    title: 'Мощный реактор',
+                    description: 'Мощность сбора 2 или больше',
+                    condition: () => clickPower >= 2,
+                    unlocked: false
+                },
+                {
+                    id: 'upgrade-all',
+                    title: 'Максимальная эффективность',
+                    description: 'Купить все улучшения',
+                    condition: () => Array.from(upgrades).every(u => u.textContent.includes('Куплено')),
+                    unlocked: false
+                }
+            ];
+            
+            // Создание частиц для анимации клика
+            function createParticles(x, y) {
+                const colors = ['#4fc3f7', '#e91e63', '#ff5722', '#7b1fa2'];
+                for (let i = 0; i < 10; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.width = `${Math.random() * 8 + 2}px`;
+                    particle.style.height = particle.style.width;
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = Math.random() * 5 + 2;
+                    const xVelocity = Math.cos(angle) * velocity;
+                    const yVelocity = Math.sin(angle) * velocity;
+                    
+                    document.body.appendChild(particle);
+                    
+                    let opacity = 1;
+                    const fadeInterval = setInterval(() => {
+                        opacity -= 0.05;
+                        particle.style.opacity = opacity;
+                        particle.style.transform = `translate(${xVelocity * (1 - opacity) * 10}px, ${yVelocity * (1 - opacity) * 10}px)`;
+                        
+                        if (opacity <= 0) {
+                            clearInterval(fadeInterval);
+                            particle.remove();
+                        }
+                    }, 30);
+                }
+            }
+            
+            // Показать уведомление
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Инициализация достижений
+            function initAchievements() {
+                achievementsContainer.innerHTML = '';
+                achievementTemplates.forEach(ach => {
+                    const achievementElement = document.createElement('div');
+                    achievementElement.className = `achievement ${ach.unlocked ? 'unlocked' : ''}`;
+                    achievementElement.id = `ach-${ach.id}`;
+                    achievementElement.innerHTML = `
+                        <div class="achievement-title">${ach.title}</div>
+                        <div class="achievement-description">${ach.description}</div>
+                    `;
+                    achievementsContainer.appendChild(achievementElement);
+                    achievements.push({...ach, element: achievementElement});
+                });
+            }
+            
+            // Проверка достижений
+            function checkAchievements() {
+                let unlockedCount = 0;
+                achievements.forEach(ach => {
+                    if (!ach.unlocked && ach.condition()) {
+                        ach.unlocked = true;
+                        ach.element.classList.add('unlocked');
+                        unlockedCount++;
+                        
+                        // Анимация для разблокированного достижения
+                        setTimeout(() => {
+                            ach.element.style.transform = 'translateY(0)';
+                        }, 100);
+                    }
+                });
+                
+                if (unlockedCount > 0) {
+                    showNotification(`Разблокировано достижение: ${achievements.find(a => a.unlocked && a.element.classList.contains('unlocked')).title}`);
+                }
+            }
+            
+            // Проверка доступности улучшений
+            function checkUpgradesAvailability() {
+                upgrades.forEach(upgrade => {
+                    const cost = parseInt(upgrade.getAttribute('data-cost'));
+                    upgrade.disabled = score < cost || upgrade.textContent.includes('Куплено');
+                });
+            }
+            
+            // Загрузка сохраненной игры
+            function loadGame() {
+                try {
+                    const savedData = localStorage.getItem('spaceClicker');
+                    if (savedData) {
+                        const parsedData = JSON.parse(savedData);
+                        
+                        score = parsedData.score || 0;
+                        totalClicks = parsedData.totalClicks || 0;
+                        clickPower = parsedData.clickPower || 1;
+                        autoIncrement = parsedData.autoIncrement || 0;
+                        
+                        // Восстанавливаем состояние улучшений
+                        upgrades.forEach(upgrade => {
+                            const upgradeId = upgrade.id;
+                            if (parsedData[upgradeId] === 'purchased') {
+                                const increment = parseInt(upgrade.getAttribute('data-increment'));
+                                upgrade.disabled = true;
+                                
+                                upgrade.textContent = upgradeId === 'upgrade4' 
+                                    ? `Куплено (x${clickPower})` 
+                                    : `Куплено (+${increment}/сек)`;
+                            }
+                        });
+                        
+                        // Восстанавливаем достижения
+                        if (parsedData.achievements) {
+                            achievements = achievementTemplates.map(ach => {
+                                const savedAch = parsedData.achievements.find(a => a.id === ach.id);
+                                return savedAch ? {...ach, unlocked: savedAch.unlocked} : ach;
+                            });
+                        }
+                        
+                        updateUI();
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки сохранения:', e);
+                }
+            }
+            
+            // Сохранение игры
+            function saveGame() {
+                const gameData = {
+                    score,
+                    totalClicks,
+                    clickPower,
+                    autoIncrement,
+                    achievements: achievements.map(ach => ({
+                        id: ach.id,
+                        unlocked: ach.unlocked
+                    }))
+                };
+                
+                // Сохраняем состояние каждого улучшения
+                upgrades.forEach(upgrade => {
+                    gameData[upgrade.id] = upgrade.textContent.includes('Куплено') ? 'purchased' : 'available';
+                });
+                
+                localStorage.setItem('spaceClicker', JSON.stringify(gameData));
+            }
+            
+            // Обновление интерфейса
+            function updateUI() {
+                scoreElement.textContent = score.toLocaleString();
+                totalClicksElement.textContent = totalClicks;
+                clickPowerElement.textContent = clickPower;
+                autoIncrementElement.textContent = autoIncrement;
+                
+                checkUpgradesAvailability();
+                checkAchievements();
+            }
+            
+            // Обработчик клика
+            function handleClick(e) {
+                score += clickPower;
+                totalClicks++;
+                
+                // Создаем частицы в месте клика
+                createParticles(e.clientX, e.clientY);
+                
+                updateUI();
+                saveGame();
+                
+                // Анимация клика
+                clicker.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    clicker.style.transform = 'scale(1)';
+                }, 100);
+            }
+            
+            // Инициализация улучшений
+            function initUpgrades() {
+                upgrades.forEach(upgrade => {
+                    upgrade.addEventListener('click', () => {
+                        const cost = parseInt(upgrade.getAttribute('data-cost'));
+                        const increment = parseInt(upgrade.getAttribute('data-increment'));
+                        
+                        if (score >= cost) {
+                            score -= cost;
+                            
+                            if (upgrade.id === 'upgrade4') {
+                                clickPower *= 2;
+                            } else {
+                                autoIncrement += increment;
+                            }
+                            
+                            upgrade.disabled = true;
+                            upgrade.textContent = upgrade.id === 'upgrade4' 
+                                ? `Куплено (x${clickPower})` 
+                                : `Куплено (+${increment}/сек)`;
+                            
+                            // Анимация покупки
+                            upgrade.style.transform = 'scale(1.1)';
+                            setTimeout(() => {
+                                upgrade.style.transform = 'scale(1)';
+                                
+                            }, 200);
+                            
+                            updateUI();
+                            saveGame();
+                        }
+                    });
+                });
+            }
+            
+            // Автоматическое увеличение счета
+            function startAutoIncrement() {
+                setInterval(() => {
+                    if (autoIncrement > 0) {
+                        score += autoIncrement;
+                        updateUI();
+                        saveGame();
+                    }
+                }, 1000);
+            }
+            
+            // Инициализация игры
+            function initGame() {
+                initAchievements();
+                loadGame();
+                initUpgrades();
+                startAutoIncrement();
+                
+                clicker.addEventListener('click', handleClick);
+                window.addEventListener('beforeunload', saveGame);
+            }
+            
+            initGame();
+        });
+    </script>
+</body>
+</html>
